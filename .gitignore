@@ -1,0 +1,33 @@
+.env
+# Environment variables (Secrets, Mail Passwords, Razorpay Keys)
+.env
+*.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# SQLite Database
+*.db
+*.sqlite3
+sql_app.db
+
+# IDE & Editor specific settings
+.vscode/
+.idea/
+*.swp
+
+# DiskCache files (used for OTP/Token storage)
+.cache/
+cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
