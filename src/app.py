@@ -13,6 +13,10 @@ from src.api.admin import admin_courses, admin_general
 from src.api.certifications import ceritficate_verification, exam_link
 from src.api.enrollment import payments
 
+
+from fastapi.middleware.cors import CORSMiddleware
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
@@ -21,6 +25,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        # Allows all origins (cross-platform)
+    allow_credentials=True,     # Allows cookies/authorization headers
+    allow_methods=["*"],        # Allows all HTTP methods (GET, POST, PUT, DELETE, OPTIONS, etc.)
+    allow_headers=["*"],        # Allows all headers
+)
 
 app.include_router(auth.router)
 app.include_router(courses.router)
