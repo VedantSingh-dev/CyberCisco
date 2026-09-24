@@ -29,7 +29,7 @@ def seed_admin_user():
 
     admin_email = "vedants.2024@upsifs.ac.in"
     admin_name = "vedant singh"
-    raw_password = "1234"
+    raw_password = "134@abc"
 
     try:
         # Check if user already exists
