@@ -31,14 +31,25 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
-    # Password Validation: Length (8-12) & Alphanumeric check
-    password = payload.password
-    if not (
-        8 <= len(password) <= 12
-        and re.search(r"[A-Za-z]", password)
-        and re.search(r"\d", password)
-        and password.isalnum()
-    ):
+    # Extract raw string if using Pydantic's SecretStr
+    password = (
+        payload.password.get_secret_value()
+        if hasattr(payload.password, "get_secret_value")
+        else payload.password
+    )
+
+    # Check 1: Length check (8 to 12 characters)
+    is_valid_len = 8 <= len(password) <= 12
+
+    # Check 2: Contains at least one letter and at least one digit
+    has_letter = bool(re.search(r"[A-Za-z]", password))
+    has_digit = bool(re.search(r"\d", password))
+
+    # Check 3: Strictly alphanumeric (no special characters/spaces)
+    # Note: Remove `and is_alphanumeric` below if you WANT special characters to be allowed.
+    is_alphanumeric = bool(re.match(r"^[A-Za-z0-9]+$", password))
+
+    if not (is_valid_len and has_letter and has_digit and is_alphanumeric):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password must be 8-12 characters long and contain both letters and numbers.",
@@ -54,7 +65,7 @@ async def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     otp = generate_otp(payload.email)
     cache_data = {
         "full_name": payload.full_name,
-        "password": hash_password(payload.password),
+        "password": hash_password(password),
     }
 
     from src.utils.auth_utils import cache
@@ -63,8 +74,6 @@ async def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
 
     await send_otp_email(payload.email, otp)
     return {"message": "OTP sent to email. Please verify to complete registration."}
-
-
 
 @router.post("/verify-registration")
 def verify_registration(payload: VerifyOTPRequest, db: Session = Depends(get_db)):
