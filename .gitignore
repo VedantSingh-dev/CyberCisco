@@ -3,6 +3,9 @@
 .env
 *.env
 
+seed.py
+
+
 # Python bytecode & cache
 __pycache__/
 *.py[cod]
