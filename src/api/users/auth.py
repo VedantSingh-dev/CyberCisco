@@ -178,7 +178,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
 
 
 @router.post("/logout")
-def logout(authorization: str = Header(...)):
+async def logout(authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=400, detail="Invalid authorization header")
 
