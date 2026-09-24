@@ -1,5 +1,10 @@
 import os
 import sys
+
+# Force UTF-8 encoding for standard output on Windows
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -8,9 +13,9 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from src.database.dbConfig import Base, SessionLocal, engine
 
-# 1. Import ALL models so SQLAlchemy can resolve relationship mapping strings
+# Import ALL models so SQLAlchemy can resolve relationship mapping strings
 from src.modals.courses_models import Course
-from src.modals.payments_models import Payment  # Fixes 'Payment' location error
+from src.modals.payments_models import Payment
 from src.modals.user_models import User
 
 # Configure passlib bcrypt context directly inside the script
@@ -36,13 +41,13 @@ def seed_admin_user():
         existing_user = db.query(User).filter(User.email == admin_email).first()
 
         if existing_user:
-            print(f"⚠️ User with email '{admin_email}' already exists.")
+            print(f"[WARNING] User with email '{admin_email}' already exists.")
 
             # Promote to ADMIN if not already
             if getattr(existing_user, "role", None) != "ADMIN":
                 existing_user.role = "ADMIN"
                 db.commit()
-                print("🔄 Existing user updated to role 'ADMIN'.")
+                print("[UPDATE] Existing user updated to role 'ADMIN'.")
             return
 
         # Hash password and create admin record
@@ -59,14 +64,14 @@ def seed_admin_user():
         db.commit()
         db.refresh(admin_user)
 
-        print("✅ Admin user seeded successfully!")
+        print("[SUCCESS] Admin user seeded successfully!")
         print(f"   Name:  {admin_user.full_name}")
         print(f"   Email: {admin_user.email}")
         print(f"   Role:  {admin_user.role}")
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Failed to seed admin user: {str(e)}")
+        print(f"[ERROR] Failed to seed admin user: {str(e)}")
     finally:
         db.close()
 
