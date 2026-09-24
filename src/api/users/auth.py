@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
+import re
 
 from src.database.dbConfig import get_db
 from src.modals.user_models import User
@@ -30,10 +31,24 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
+    # Password Validation: Length (8-12) & Alphanumeric check
+    password = payload.password
+    if not (
+        8 <= len(password) <= 12
+        and re.search(r"[A-Za-z]", password)
+        and re.search(r"\d", password)
+        and password.isalnum()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be 8-12 characters long and contain both letters and numbers.",
+        )
+
     db_user = db.query(User).filter(User.email == payload.email).first()
     if db_user:
         raise HTTPException(
-            status_code=400, detail="User with this email already exists"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists",
         )
 
     otp = generate_otp(payload.email)
@@ -41,12 +56,14 @@ async def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
         "full_name": payload.full_name,
         "password": hash_password(payload.password),
     }
+
     from src.utils.auth_utils import cache
 
     cache.set(f"reg:{payload.email}", cache_data, expire=600)
 
     await send_otp_email(payload.email, otp)
     return {"message": "OTP sent to email. Please verify to complete registration."}
+
 
 
 @router.post("/verify-registration")
