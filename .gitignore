@@ -3,7 +3,7 @@
 .env
 *.env
 
-seed.py
+
 
 
 # Python bytecode & cache
