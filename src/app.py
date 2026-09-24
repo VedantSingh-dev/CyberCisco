@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import subprocess
 from fastapi import FastAPI
 
 from src.database.dbConfig import Base, engine
@@ -13,15 +14,25 @@ from src.api.admin import admin_courses, admin_general
 from src.api.certifications import ceritficate_verification, exam_link
 from src.api.enrollment import payments
 
-
 from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 1. Create database tables first
     Base.metadata.create_all(bind=engine)
+    
+    # 2. Run seed script after tables are ready
+    try:
+        print("Running seed script...")
+        result = subprocess.run(["python", "seed.py"], capture_output=True, text=True)
+        print("Seed Output:", result.stdout)
+        if result.stderr:
+            print("Seed Warnings/Errors:", result.stderr)
+    except Exception as e:
+        print(f"Failed to execute seed script: {e}")
+        
     yield
-
 
 
 app = FastAPI(lifespan=lifespan)
@@ -46,4 +57,3 @@ app.include_router(payments.router)
 @app.get("/")
 def home():
     return {"message": "Application Running..."}
-
