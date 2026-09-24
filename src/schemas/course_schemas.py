@@ -22,7 +22,7 @@ class CourseListResponse(BaseModel):
     image_url: str | None
     price: float
     created_at: datetime
-    total_lectures: int
+    total_lectures: int 
 
     model_config = ConfigDict(from_attributes=True)
 
